@@ -1,11 +1,14 @@
 import json
 import urllib2
+import urlparse
 from rlib.helpers import validate_object
 
 __author__ = 'Dean Gardiner'
 
 
 class Reddit(object):
+    __version__ = "0.11"
+
     URL_SSL_LOGIN = "https://ssl.reddit.com/api/login"
     URL_LOGIN = "/api/login/username"
 
@@ -15,14 +18,16 @@ class Reddit(object):
     URL_COMPOSE_MESSAGE = "/api/compose"
     URL_REGISTER_ACCOUNT = "/api/register"
     URL_GET_THING = "/by_id/%s.json"
-    URL_GET_COMMENT = "/r/%s/comments/%s/foo/%s.json"
+    URL_GET_COMMENT = "/r/%s/comments/%s/_/%s.json"
     URL_GET_POST = "%s.json"
 
     DOMAIN = "www.reddit.com"
 
-    def __init__(self):
+    def __init__(self, user_agent=None):
         self.domain = Reddit.DOMAIN
-        self.user_agent = "rlib/0.1"
+
+        self.user_agent = user_agent + ' ' if user_agent else ''
+        self.user_agent += "rlib/" + self.__version__
 
     def get_user(self, name):
         json = self._request(Reddit.URL_USER_INFO % name)
@@ -119,6 +124,8 @@ class RedditUser(Thing):
 
 
 class RedditComment(Thing):
+    URL_COMMENT_PERMALINK = "/r/%s/comments/%s/_/%s"
+
     def __init__(self, reddit, json):
         super(RedditComment, self).__init__(json)
 
@@ -168,6 +175,22 @@ class RedditComment(Thing):
                 self.replies.append(RedditComment(reddit, comment))
 
         validate_object(self, data, ['replies'])
+
+        # Create permalink
+        self.permalink = self.create_permalink("http://%s" % self._reddit.domain, self)
+
+    @staticmethod
+    def create_permalink(base, comment):
+        link_id = comment.link_id
+        if link_id.startswith("t3_"):
+            link_id = link_id[3:]
+
+        return urlparse.urljoin(
+            base,
+            RedditComment.URL_COMMENT_PERMALINK % (
+                comment.subreddit, link_id, comment.id
+            )
+        )
 
 
 class Listing(object):

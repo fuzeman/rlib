@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='rlib',
-    version='0.1',
+    version='0.11',
     packages=['rlib'],
     url='',
     license='',
