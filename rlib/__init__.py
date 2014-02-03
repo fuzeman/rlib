@@ -1,7 +1,8 @@
 import json
+from pprint import pprint
 import urllib2
 import urlparse
-from rlib.helpers import validate_object
+from rlib.helpers import validate_object, html_unescape
 
 __author__ = 'Dean Gardiner'
 
@@ -33,7 +34,7 @@ class Reddit(object):
         json = self._request(Reddit.URL_USER_INFO % name)
         return RedditUser(self, json)
 
-    def get_comment(self, subreddit, link_id, comment_id):
+    def get_comment(self, subreddit, link_id, comment_id, include_link=False):
         if link_id.startswith("t3_"):
             link_id = link_id[3:]
 
@@ -43,10 +44,17 @@ class Reddit(object):
         json = self._request(Reddit.URL_GET_COMMENT % (subreddit, link_id, comment_id))
         if len(json) < 2:
             return None
+
         if len(json[1]["data"]["children"]) < 1:
             return None
 
-        return Thing.parse(self, json[1]["data"]["children"][0])
+        comment = Thing.parse(self, json[1]["data"]["children"][0])
+
+        if include_link:
+            link = Thing.parse(self, json[0]["data"]["children"][0])
+            return link, comment
+
+        return comment
 
     def _request(self, url, prepend_domain=True):
         url = "http://%s%s" % (self.domain, url) if prepend_domain else url
@@ -74,6 +82,8 @@ class Thing(object):
             return RedditComment(reddit, json)
         elif kind == 't2':
             return RedditUser(reddit, json)
+        elif kind == 't3':
+            return RedditLink(reddit, json)
         else:
             raise NotImplementedError()
 
@@ -123,13 +133,10 @@ class RedditUser(Thing):
         pass
 
 
-class RedditComment(Thing):
-    URL_COMMENT_PERMALINK = "/r/%s/comments/%s/_/%s"
+class RedditContent(Thing):
+    def __init__(self, json):
+        super(RedditContent, self).__init__(json)
 
-    def __init__(self, reddit, json):
-        super(RedditComment, self).__init__(json)
-
-        self._reddit = reddit
         data = json['data']
 
         self.name = data.get('name')
@@ -141,8 +148,7 @@ class RedditComment(Thing):
         self.banned_by = data.get('banned_by')
         self.approved_by = data.get('approved_by')
 
-        self.body = data.get('body')
-        self.body_html = data.get('body_html')
+        self.saved = data.get('saved')
 
         self.created = data.get('created')
         self.created_utc = data.get('created_utc')
@@ -152,9 +158,27 @@ class RedditComment(Thing):
 
         self.ups = data.get('ups')
         self.downs = data.get('downs')
+        self.likes = data.get('likes')
         self.score_hidden = data.get('score_hidden')
 
-        self.likes = data.get('likes')
+        self.num_reports = data.get('num_reports')
+
+        self.subreddit = data.get('subreddit')
+        self.subreddit_id = data.get('subreddit_id')
+
+
+
+class RedditComment(RedditContent):
+    URL_COMMENT_PERMALINK = "/r/%s/comments/%s/_/%s"
+
+    def __init__(self, reddit, json):
+        super(RedditComment, self).__init__(json)
+
+        self._reddit = reddit
+        data = json['data']
+
+        self.body = data.get('body')
+        self.body_html = html_unescape(data.get('body_html'))
 
         self.gilded = data.get('gilded')
 
@@ -162,11 +186,6 @@ class RedditComment(Thing):
 
         self.link_id = data.get('link_id')
         self.link_title = data.get('link_title')
-
-        self.num_reports = data.get('num_reports')
-
-        self.subreddit = data.get('subreddit')
-        self.subreddit_id = data.get('subreddit_id')
 
         # Parse replies
         self.replies = []
@@ -191,6 +210,47 @@ class RedditComment(Thing):
                 comment.subreddit, link_id, comment.id
             )
         )
+
+
+class RedditLink(RedditContent):
+    def __init__(self, reddit, json):
+        super(RedditLink, self).__init__(json)
+
+        self._reddit = reddit
+        data = json['data']
+
+        self.title = data.get('title')
+        self.url = data.get('url')
+        self.domain = data.get('domain')
+        self.thumbnail = data.get('thumbnail')
+
+        self.link_flair_css_class = data.get('link_flair_css_class')
+        self.link_flair_text = data.get('link_flair_text')
+
+        self.stickied = data.get('stickied')
+        self.clicked = data.get('clicked')
+        self.visited = data.get('visited')
+        self.is_self = data.get('is_self')
+        self.over_18 = data.get('over_18')
+        self.hidden = data.get('hidden')
+
+        self.selftext = data.get('selftext')
+        self.selftext_html = html_unescape(data['selftext_html']) if data.get('selftext_html') else None
+
+        self.score = data.get('score')
+
+        self.num_comments = data.get('num_comments')
+
+        self.media = data.get('media')
+        self.media_embed = data.get('media_embed')
+
+        self.secure_media = data.get('secure_media')
+        self.secure_media_embed = data.get('secure_media_embed')
+
+        self.permalink = 'http://%s%s' % (self._reddit.domain, data.get('permalink'))
+
+        validate_object(self, data)
+
 
 
 class Listing(object):
