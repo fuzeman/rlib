@@ -20,7 +20,7 @@ class Reddit(object):
     URL_REGISTER_ACCOUNT = "/api/register"
     URL_GET_THING = "/by_id/%s.json"
     URL_GET_COMMENT = "/r/%s/comments/%s/_/%s.json"
-    URL_GET_POST = "%s.json"
+    URL_GET_LINK = "/r/%s/comments/%s.json"
 
     DOMAIN = "www.reddit.com"
 
@@ -55,6 +55,16 @@ class Reddit(object):
             return link, comment
 
         return comment
+
+    def get_link(self, subreddit, link_id):
+        if link_id.startswith("t3_"):
+            link_id = link_id[3:]
+
+        json = self._request(Reddit.URL_GET_LINK % (subreddit, link_id))
+        if len(json) < 1:
+            return None
+
+        return Thing.parse(self, json[0]["data"]["children"][0])
 
     def _request(self, url, prepend_domain=True):
         url = "http://%s%s" % (self.domain, url) if prepend_domain else url
@@ -250,7 +260,6 @@ class RedditLink(RedditContent):
         self.permalink = 'http://%s%s' % (self._reddit.domain, data.get('permalink'))
 
         validate_object(self, data)
-
 
 
 class Listing(object):
