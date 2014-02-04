@@ -34,40 +34,55 @@ class Reddit(object):
         json = self._request(Reddit.URL_USER_INFO % name)
         return RedditUser(self, json)
 
-    def get_comment(self, subreddit, link_id, comment_id, include_link=False):
-        if link_id.startswith("t3_"):
-            link_id = link_id[3:]
+    def get_comment(self, subreddit=None, link_id=None, comment_id=None, url=None, include_link=False):
+        if not url:
+            if not subreddit or not link_id or not comment_id:
+                raise ValueError('Either the "subreddit", "link_id" and "comment_id" or "url" parameters are required')
 
-        if comment_id.startswith("t1_"):
-            comment_id = comment_id[3:]
+            if link_id.startswith("t3_"):
+                link_id = link_id[3:]
 
-        json = self._request(Reddit.URL_GET_COMMENT % (subreddit, link_id, comment_id))
-        if len(json) < 2:
+            if comment_id.startswith("t1_"):
+                comment_id = comment_id[3:]
+
+            url = self._prepend_domain(Reddit.URL_GET_COMMENT % (subreddit, link_id, comment_id))
+
+        response = self._request(url, prepend_domain=False)
+        if len(response) < 2:
             return None
 
-        if len(json[1]["data"]["children"]) < 1:
+        if len(response[1]["data"]["children"]) < 1:
             return None
 
-        comment = Thing.parse(self, json[1]["data"]["children"][0])
+        comment = Thing.parse(self, response[1]["data"]["children"][0])
 
         if include_link:
-            link = Thing.parse(self, json[0]["data"]["children"][0])
+            link = Thing.parse(self, response[0]["data"]["children"][0])
             return link, comment
 
         return comment
 
-    def get_link(self, subreddit, link_id):
-        if link_id.startswith("t3_"):
-            link_id = link_id[3:]
+    def get_link(self, subreddit=None, link_id=None, url=None):
+        if not url:
+            if not subreddit or not link_id:
+                raise ValueError('Either the "subreddit" and "link_id"" or "url" parameters are required')
 
-        json = self._request(Reddit.URL_GET_LINK % (subreddit, link_id))
-        if len(json) < 1:
+            if link_id.startswith("t3_"):
+                link_id = link_id[3:]
+
+            url = self._prepend_domain(Reddit.URL_GET_LINK % (subreddit, link_id))
+
+        response = self._request(url, prepend_domain=False)
+        if len(response) < 1:
             return None
 
-        return Thing.parse(self, json[0]["data"]["children"][0])
+        return Thing.parse(self, response[0]["data"]["children"][0])
+
+    def _prepend_domain(self, path):
+        return "http://%s%s" % (self.domain, path)
 
     def _request(self, url, prepend_domain=True):
-        url = "http://%s%s" % (self.domain, url) if prepend_domain else url
+        url = self._prepend_domain(url) if prepend_domain else url
 
         request = urllib2.Request(url)
         request.add_header('User-Agent', self.user_agent)
