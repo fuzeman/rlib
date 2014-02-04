@@ -1,4 +1,9 @@
+import HTMLParser
+
 __author__ = 'Dean Gardiner'
+
+
+h = HTMLParser.HTMLParser()
 
 
 def validate_object(obj, data, ignore=None):
@@ -8,9 +13,13 @@ def validate_object(obj, data, ignore=None):
     missing = {}
 
     for key, value in data.items():
-        if not hasattr(obj, key) or getattr(obj, key) != value:
+        if not hasattr(obj, key):
             if key not in ignore:
                 missing[key] = value
 
     if len(missing) > 0:
         print "Object missing some keys:", missing
+
+
+def html_unescape(s):
+    return h.unescape(s)
