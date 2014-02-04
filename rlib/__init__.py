@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from pprint import pprint
 import urllib2
@@ -115,8 +116,8 @@ class RedditUser(Thing):
         self.link_karma = data.get('link_karma')
         self.comment_karma = data.get('comment_karma')
 
-        self.created = data.get('created')
-        self.created_utc = data.get('created_utc')
+        self.created = datetime.fromtimestamp(data.get('created'))
+        self.created_utc = datetime.utcfromtimestamp(data.get('created_utc'))
 
         self.has_mail = data.get('has_mail')
         self.has_mod_mail = data.get('has_mod_mail')
@@ -160,8 +161,8 @@ class RedditContent(Thing):
 
         self.saved = data.get('saved')
 
-        self.created = data.get('created')
-        self.created_utc = data.get('created_utc')
+        self.created = datetime.fromtimestamp(data.get('created'))
+        self.created_utc = datetime.utcfromtimestamp(data.get('created_utc'))
 
         self.edited = data.get('edited')
         self.distinguished = data.get('distinguished')
