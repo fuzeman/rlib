@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name='rlib',
-    version='0.11',
+    version='0.12',
     packages=['rlib'],
     url='',
     license='',

@@ -1,6 +1,5 @@
 from datetime import datetime
 import json
-from pprint import pprint
 import urllib2
 import urlparse
 from rlib.helpers import validate_object, html_unescape
@@ -9,7 +8,7 @@ __author__ = 'Dean Gardiner'
 
 
 class Reddit(object):
-    __version__ = "0.11"
+    __version__ = "0.12"
 
     URL_SSL_LOGIN = "https://ssl.reddit.com/api/login"
     URL_LOGIN = "/api/login/username"
