@@ -216,6 +216,9 @@ class RedditComment(RedditContent):
         self.replies = []
         if data["replies"] and len(data["replies"]) > 0:
             for comment in data["replies"]["data"]["children"]:
+                if comment.get('kind') != 't1':
+                    continue
+
                 self.replies.append(RedditComment(reddit, comment))
 
         validate_object(self, data, ['replies'])
