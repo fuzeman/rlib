@@ -31,11 +31,11 @@ class Reddit(object):
         self._account_regex = re_compile(self.ACCOUNT_PATTERNS, re.IGNORECASE)
         self._subreddit_regex = re_compile(self.SUBREDDIT_PATTERNS, re.IGNORECASE)
 
-    def account(self, identifier):
-        return self._get_interface(AccountInterface, self._account_regex, identifier)
+    def account(self, identifier, domain=None):
+        return self._get_interface(AccountInterface, self._account_regex, identifier, domain)
 
-    def subreddit(self, identifier):
-        return self._get_interface(SubredditInterface, self._subreddit_regex, identifier)
+    def subreddit(self, identifier, domain=None):
+        return self._get_interface(SubredditInterface, self._subreddit_regex, identifier, domain)
 
     def request(self, url):
         print 'Requesting "%s"' % url
@@ -46,7 +46,7 @@ class Reddit(object):
         response = urllib2.urlopen(request)
         return json.loads(response.read())
 
-    def _get_interface(self, interface, regex, identifier):
+    def _get_interface(self, interface, regex, identifier, domain=None):
         match = re_match(regex, identifier)
         if not match:
             raise ValueError('Unable to match subreddit identifier')
@@ -55,6 +55,6 @@ class Reddit(object):
 
         # Add default domain if one is specified
         if not match.get('domain'):
-            match['domain'] = self.domain
+            match['domain'] = domain or self.domain
 
         return interface(self, **match)
