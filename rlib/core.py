@@ -15,10 +15,7 @@ class RedditBase(object):
         )
 
     def request(self, path):
-        url = self._build_url(path)
-
-        print 'Requesting "%s"' % url
-        return self._reddit.request(url, prepend_domain=False)
+        return self._reddit.request(self._build_url(path))
 
     def get(self, path):
         return Thing.parse(self._reddit, self.request(path))

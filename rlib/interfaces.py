@@ -2,16 +2,42 @@ from rlib.core import RedditBase
 from rlib.things import Thing
 
 
-class SubredditInterface(RedditBase):
-    def __init__(self, reddit, domain, name):
-        super(SubredditInterface, self).__init__(reddit, domain)
+class Interface(RedditBase):
+    pass
 
-        self.name = name
+
+class AccountInterface(Interface):
+    def __init__(self, reddit, domain, username):
+        super(AccountInterface, self).__init__(reddit, domain)
+
+        self.name = username
 
     def about(self):
         return self.get('about')
 
-    def comments(self, article, comment=None, include_link=False):
+    def _build_url(self, path):
+        return super(AccountInterface, self)._build_url('user/%s/%s' % (self.name, path))
+
+    def __str__(self):
+        return '<rlib.SubReddit %s>' % ', '.join([
+            ('%s: %s' % (x, repr(getattr(self, x))))
+            for x in ['domain', 'name']
+        ])
+
+    def __repr__(self):
+        return str(self)
+
+
+class SubredditInterface(Interface):
+    def __init__(self, reddit, domain, subreddit):
+        super(SubredditInterface, self).__init__(reddit, domain)
+
+        self.name = subreddit
+
+    def about(self):
+        return self.get('about')
+
+    def comments(self, article, comment=None, include_comments=True, include_link=False):
         response = self.request('comments/%s/_%s' % (
             article,
             ('/' + comment) if comment else ''
@@ -22,16 +48,25 @@ class SubredditInterface(RedditBase):
         if len(response[1]["data"]["children"]) < 1:
             return None
 
-        comment = Thing.parse(self, response[1]["data"]["children"][0])
+        result = []
+
+        if include_comments:
+            result.append(Thing.parse(self, response[1]["data"]["children"][0]))
 
         if include_link:
-            link = Thing.parse(self, response[0]["data"]["children"][0])
-            return link, comment
+            result.append(Thing.parse(self, response[0]["data"]["children"][0]))
 
-        return comment
+        if len(result) == 1:
+            return result[0]
+
+        return tuple(result)
+
+    # TODO don't request comments
+    def link(self, article):
+        return self.comments(article, include_comments=False, include_link=True)
 
     def _build_url(self, path):
-        return super(SubredditInterface, self)._build_url('/r/%s/%s' % (self.name, path))
+        return super(SubredditInterface, self)._build_url('r/%s/%s' % (self.name, path))
 
     def __str__(self):
         return '<rlib.SubReddit %s>' % ', '.join([
