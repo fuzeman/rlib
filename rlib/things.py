@@ -204,6 +204,7 @@ class Subreddit(Thing):
     def __init__(self, reddit, json):
         super(Subreddit, self).__init__(json)
 
+        self._reddit = reddit
         data = json['data']
 
         self.title = data.get('title')

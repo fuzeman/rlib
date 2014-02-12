@@ -21,22 +21,9 @@ class Reddit(object):
         r"^(?P<subreddit>\w+)$"
     ]
 
-    URL_SSL_LOGIN = "https://ssl.reddit.com/api/login"
-    URL_LOGIN = "/api/login/username"
-
-    URL_USER_INFO = "/user/%s/about.json"
-    URL_ME = "/api/me.json"
-    URL_SUBREDDIT_ABOUT = "/r/%s/about.json"
-    URL_COMPOSE_MESSAGE = "/api/compose"
-    URL_REGISTER_ACCOUNT = "/api/register"
-    URL_GET_THING = "/by_id/%s.json"
-    URL_GET_COMMENT = "/r/%s/comments/%s/_/%s.json"
-    URL_GET_LINK = "/r/%s/comments/%s.json"
-
-    DOMAIN = "reddit.com"
-
-    def __init__(self, use_https=True, user_agent=None):
+    def __init__(self, use_https=True, domain="reddit.com", user_agent=None):
         self.use_https = use_https
+        self.domain = domain
 
         self.user_agent = user_agent + ' ' if user_agent else ''
         self.user_agent += "rlib/" + __version__
@@ -68,6 +55,6 @@ class Reddit(object):
 
         # Add default domain if one is specified
         if not match.get('domain'):
-            match['domain'] = self.DOMAIN
+            match['domain'] = self.domain
 
         return interface(self, **match)
