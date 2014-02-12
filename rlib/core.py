@@ -8,7 +8,7 @@ class RedditBase(object):
         self.domain = domain
 
     def _build_url(self, path):
-        return 'http%s://%s/%s.json' % (
+        return 'http%s://%s/%s' % (
             's' if self._reddit.use_https else '',
             self.domain,
             path
@@ -18,4 +18,4 @@ class RedditBase(object):
         return self._reddit.request(self._build_url(path))
 
     def get(self, path):
-        return Thing.parse(self._reddit, self.request(path))
+        return Thing.parse(self._reddit, self.request(path + '.json'))

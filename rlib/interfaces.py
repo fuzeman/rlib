@@ -37,11 +37,17 @@ class SubredditInterface(Interface):
     def about(self):
         return self.get('about')
 
-    def comments(self, article, comment=None, include_comments=True, include_link=False):
-        response = self.request('comments/%s/_%s' % (
+    def comments(self, article, comment=None, include_comments=True, include_link=False, limit=None):
+        if not include_comments:
+            limit = 1
+
+        # TODO clean request url generation up
+        response = self.request('comments/%s/_%s.json%s' % (
             article,
-            ('/' + comment) if comment else ''
+            ('/' + comment) if comment else '',
+            ('?limit=%s' % limit) if limit is not None else ''
         ))
+
         if len(response) < 2:
             return None
 
