@@ -1,3 +1,5 @@
+from rlib import __author__, __version__
+
 try:
     from setuptools import setup
 except ImportError:
@@ -5,11 +7,11 @@ except ImportError:
 
 setup(
     name='rlib',
-    version='0.12',
+    version=__version__,
     packages=['rlib'],
     url='',
     license='',
-    author='Dean Gardiner',
+    author=__author__,
     author_email='gardiner91@gmail.com',
     description=''
 )
