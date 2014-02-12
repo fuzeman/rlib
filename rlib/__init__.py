@@ -6,7 +6,7 @@ import json
 import re
 
 __author__ = 'Dean Gardiner'
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 
 class Reddit(object):
