@@ -1,5 +1,6 @@
 from rlib.core import RedditBase
 from rlib.things import Thing
+import urllib
 
 
 class Interface(RedditBase):
@@ -37,15 +38,20 @@ class SubredditInterface(Interface):
     def about(self):
         return self.get('about')
 
-    def comments(self, article, comment=None, include_comments=True, include_link=False, limit=None):
+    def comments(self, article, comment=None, include_comments=True, include_link=False, limit=None, context=None):
         if not include_comments:
             limit = 1
+
+        parameters = dict([(k, v) for (k, v) in [
+            ('limit', limit),
+            ('context', context)
+        ] if v])
 
         # TODO clean request url generation up
         response = self.request('comments/%s/_%s.json%s' % (
             article,
             ('/' + comment) if comment else '',
-            ('?limit=%s' % limit) if limit is not None else ''
+            ('?%s' % urllib.urlencode(parameters)) if parameters else ''
         ))
 
         if len(response) < 2:
