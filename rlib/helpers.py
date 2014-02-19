@@ -23,6 +23,9 @@ def validate_object(obj, data, ignore=None):
 
 
 def html_unescape(s):
+    if not s:
+        return s
+
     return h.unescape(s)
 
 
